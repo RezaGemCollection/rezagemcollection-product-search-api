@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reza Gem Collection - Product Sync</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .sync-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .sync-button {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(39, 174, 96, 0.3);
+        }
+
+        .sync-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(39, 174, 96, 0.4);
+        }
+
+        .sync-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .status-value {
+            color: #6c757d;
+            font-family: monospace;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .log-section {
+            background: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 5px 0;
+        }
+
+        .log-entry.success { color: #2ecc71; }
+        .log-entry.error { color: #e74c3c; }
+        .log-entry.info { color: #3498db; }
+        .log-entry.warning { color: #f39c12; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .last-sync {
+            background: #e8f5e8;
+            border: 1px solid #c3e6c3;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .last-sync h3 {
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #27ae60;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💎 Reza Gem Collection</h1>
+            <p>Product Sync Dashboard</p>
+        </div>
+
+        <div class="content">
+            <!-- Sync Button Section -->
+            <div class="sync-section">
+                <button id="syncButton" class="sync-button" onclick="startSync()">
+                    🔄 Sync Products from Shopify
+                </button>
+                <div class="progress-bar" id="progressBar" style="display: none;">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <!-- Last Sync Info -->
+            <div class="last-sync" id="lastSyncInfo" style="display: none;">
+                <h3>✅ Last Sync Completed</h3>
+                <div id="lastSyncDetails"></div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid" id="statsGrid" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalProducts">0</div>
+                    <div class="stat-label">Total Products</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalVariants">0</div>
+                    <div class="stat-label">Total Variants</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="lastSyncTime">-</div>
+                    <div class="stat-label">Last Sync</div>
+                </div>
+            </div>
+
+            <!-- Status Section -->
+            <div class="status-section" id="statusSection" style="display: none;">
+                <h3 style="margin-bottom: 20px; color: #2c3e50;">Sync Status</h3>
+                <div class="status-item">
+                    <span class="status-label">Status:</span>
+                    <span class="status-value" id="syncStatus">Ready</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Products Fetched:</span>
+                    <span class="status-value" id="productsFetched">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Products Updated:</span>
+                    <span class="status-value" id="productsUpdated">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Variants Fetched:</span>
+                    <span class="status-value" id="variantsFetched">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Variants Updated:</span>
+                    <span class="status-value" id="variantsUpdated">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Duration:</span>
+                    <span class="status-value" id="syncDuration">-</span>
+                </div>
+            </div>
+
+            <!-- Log Section -->
+            <div class="log-section" id="logSection" style="display: none;">
+                <h3 style="margin-bottom: 15px; color: #ecf0f1;">Sync Log</h3>
+                <div id="logContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isSyncing = false;
+        let syncInterval;
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLastSyncInfo();
+            loadStats();
+        });
+
+        // Start the sync process
+        async function startSync() {
+            if (isSyncing) return;
+
+            isSyncing = true;
+            const syncButton = document.getElementById('syncButton');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+
+            // Update UI
+            syncButton.disabled = true;
+            syncButton.innerHTML = '<span class="loading"></span>Syncing...';
+            progressBar.style.display = 'block';
+            progressFill.style.width = '0%';
+
+            // Show status and log sections
+            document.getElementById('statusSection').style.display = 'block';
+            document.getElementById('logSection').style.display = 'block';
+
+            // Clear previous logs
+            document.getElementById('logContent').innerHTML = '';
+
+            // Add initial log entry
+            addLogEntry('🚀 Starting Shopify to MySQL sync...', 'info');
+
+            try {
+                // Simulate progress (since we can't track real-time progress from the sync script)
+                let progress = 0;
+                syncInterval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress > 90) progress = 90;
+                    progressFill.style.width = progress + '%';
+                }, 500);
+
+                // Call the sync API
+                const response = await fetch('/api/sync', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                clearInterval(syncInterval);
+                progressFill.style.width = '100%';
+
+                if (response.ok) {
+                    const result = await response.json();
+                    handleSyncSuccess(result);
+                } else {
+                    const error = await response.text();
+                    handleSyncError(error);
+                }
+
+            } catch (error) {
+                clearInterval(syncInterval);
+                handleSyncError(error.message);
+            } finally {
+                // Reset UI
+                isSyncing = false;
+                syncButton.disabled = false;
+                syncButton.innerHTML = '🔄 Sync Products from Shopify';
+                
+                // Hide progress bar after a delay
+                setTimeout(() => {
+                    progressBar.style.display = 'none';
+                }, 2000);
+            }
+        }
+
+        // Handle successful sync
+        function handleSyncSuccess(result) {
+            addLogEntry('✅ Sync completed successfully!', 'success');
+            addLogEntry(`📊 Products: ${result.productsUpdated}/${result.productsFetched}`, 'info');
+            addLogEntry(`📊 Variants: ${result.variantsUpdated}/${result.variantsFetched}`, 'info');
+            addLogEntry(`⏱️ Duration: ${result.durationSeconds.toFixed(2)} seconds`, 'info');
+
+            // Update status
+            document.getElementById('syncStatus').textContent = 'Completed';
+            document.getElementById('productsFetched').textContent = result.productsFetched;
+            document.getElementById('productsUpdated').textContent = result.productsUpdated;
+            document.getElementById('variantsFetched').textContent = result.variantsFetched;
+            document.getElementById('variantsUpdated').textContent = result.variantsUpdated;
+            document.getElementById('syncDuration').textContent = result.durationSeconds.toFixed(2) + 's';
+
+            // Reload data
+            setTimeout(() => {
+                loadLastSyncInfo();
+                loadStats();
+            }, 1000);
+        }
+
+        // Handle sync error
+        function handleSyncError(error) {
+            addLogEntry('❌ Sync failed: ' + error, 'error');
+            document.getElementById('syncStatus').textContent = 'Failed';
+        }
+
+        // Add log entry
+        function addLogEntry(message, type = 'info') {
+            const logContent = document.getElementById('logContent');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logContent.appendChild(logEntry);
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+
+        // Load last sync information
+        async function loadLastSyncInfo() {
+            try {
+                const response = await fetch('/api/last-sync');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.lastSync) {
+                        document.getElementById('lastSyncInfo').style.display = 'block';
+                        document.getElementById('lastSyncDetails').innerHTML = `
+                            <p><strong>Date:</strong> ${new Date(data.lastSync.sync_date).toLocaleString()}</p>
+                            <p><strong>Products:</strong> ${data.lastSync.products_updated}/${data.lastSync.products_fetched}</p>
+                            <p><strong>Variants:</strong> ${data.lastSync.variants_updated}/${data.lastSync.variants_fetched}</p>
+                            <p><strong>Duration:</strong> ${data.lastSync.duration_seconds.toFixed(2)}s</p>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load last sync info:', error);
+            }
+        }
+
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('statsGrid').style.display = 'grid';
+                    document.getElementById('totalProducts').textContent = data.totalProducts;
+                    document.getElementById('totalVariants').textContent = data.totalVariants;
+                    document.getElementById('lastSyncTime').textContent = data.lastSyncTime || '-';
+                }
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+    </script>
+</body>
+</html>
