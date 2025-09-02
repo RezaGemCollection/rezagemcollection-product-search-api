@@ -2,10 +2,10 @@
   "name": "rezagemcollection-sync",
   "version": "1.0.0",
   "description": "Shopify to MySQL product sync system for Reza Gem Collection",
-  "main": "sync-server.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node sync-server.js",
-    "dev": "nodemon sync-server.js",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
     "sync": "node shopify-to-mysql-sync.js",
     "setup-db": "mysql -u root -p < setup-mysql.sql"
   },
