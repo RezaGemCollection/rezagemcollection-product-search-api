@@ -3,10 +3,11 @@ const mysql = require('mysql2/promise');
 
 // Configuration - SECURE VERSION
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const MYSQL_HOST = process.env.MYSQL_HOST || 'localhost';
-const MYSQL_USER = process.env.MYSQL_USER || 'root';
-const MYSQL_PASSWORD = process.env.MYSQL_PASSWORD || '';
-const MYSQL_DATABASE = process.env.MYSQL_DATABASE || 'rezagemcollection';
+const MYSQL_HOST = process.env.MYSQLHOST || process.env.MYSQL_HOST || 'localhost';
+const MYSQL_USER = process.env.MYSQLUSER || process.env.MYSQL_USER || 'root';
+const MYSQL_PASSWORD = process.env.MYSQLPASSWORD || process.env.MYSQL_PASSWORD || '';
+const MYSQL_DATABASE = process.env.MYSQLDATABASE || process.env.MYSQL_DATABASE || 'rezagemcollection';
+const MYSQL_PORT = process.env.MYSQLPORT || process.env.MYSQL_PORT || 3306;
 
 // Performance optimizations - In-memory caching
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -33,6 +34,7 @@ async function initMySQL() {
     if (!connectionPool) {
       connectionPool = mysql.createPool({
         host: MYSQL_HOST,
+        port: MYSQL_PORT,
         user: MYSQL_USER,
         password: MYSQL_PASSWORD,
         database: MYSQL_DATABASE,
