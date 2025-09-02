@@ -46,11 +46,84 @@ async function initMySQL() {
     
     // Test connection
     const connection = await connectionPool.getConnection();
+    
+    // Create products table if it doesn't exist
+    await createProductsTable(connection);
+    
     connection.release();
     return true;
   } catch (error) {
     console.error('❌ MySQL connection failed:', error.message);
     return false;
+  }
+}
+
+// Function to create products table if it doesn't exist
+async function createProductsTable(connection) {
+  try {
+    const createTableSQL = `
+      CREATE TABLE IF NOT EXISTS products (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        tags VARCHAR(500),
+        image_url VARCHAR(500),
+        image_alt VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+    
+    await connection.execute(createTableSQL);
+    console.log('✅ Products table created/verified successfully');
+    
+    // Check if table is empty and add sample data
+    const [rows] = await connection.execute('SELECT COUNT(*) as count FROM products');
+    if (rows[0].count === 0) {
+      await addSampleProducts(connection);
+      console.log('✅ Sample products added to database');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error creating products table:', error.message);
+  }
+}
+
+// Function to add sample products
+async function addSampleProducts(connection) {
+  try {
+    const sampleProducts = [
+      {
+        title: 'Ruby Gemstone',
+        description: 'Beautiful red ruby gemstone with excellent clarity',
+        tags: 'ruby,red,gemstone,precious',
+        image_url: 'https://example.com/ruby.jpg',
+        image_alt: 'Ruby Gemstone'
+      },
+      {
+        title: 'Sapphire Crystal',
+        description: 'Stunning blue sapphire with deep color',
+        tags: 'sapphire,blue,gemstone,precious',
+        image_url: 'https://example.com/sapphire.jpg',
+        image_alt: 'Sapphire Crystal'
+      },
+      {
+        title: 'Emerald Stone',
+        description: 'Vibrant green emerald with natural inclusions',
+        tags: 'emerald,green,gemstone,precious',
+        image_url: 'https://example.com/emerald.jpg',
+        image_alt: 'Emerald Stone'
+      }
+    ];
+    
+    for (const product of sampleProducts) {
+      await connection.execute(
+        'INSERT INTO products (title, description, tags, image_url, image_alt) VALUES (?, ?, ?, ?, ?)',
+        [product.title, product.description, product.tags, product.image_url, product.image_alt]
+      );
+    }
+    
+  } catch (error) {
+    console.error('❌ Error adding sample products:', error.message);
   }
 }
 
