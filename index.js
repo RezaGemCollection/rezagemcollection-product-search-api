@@ -670,13 +670,22 @@ function formatProductResponse(products, searchWords) {
 }
 
 // Start the server
-const server = app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Reza Gem Collection Webhook running on port ${PORT}`);
   console.log(`🌐 Health check: http://0.0.0.0:${PORT}/`);
   console.log(`🔗 Webhook endpoint: http://0.0.0.0:${PORT}/webhook`);
   console.log(`📊 MySQL Host: ${MYSQL_HOST}`);
   console.log(`👤 MySQL User: ${MYSQL_USER}`);
   console.log(`🗄️ MySQL Database: ${MYSQL_DATABASE}`);
+  
+  // Initialize MySQL and create tables on startup
+  try {
+    console.log('🔧 Initializing MySQL and creating tables...');
+    await initMySQL();
+    console.log('✅ MySQL initialized and tables ready!');
+  } catch (error) {
+    console.error('❌ Failed to initialize MySQL on startup:', error.message);
+  }
 });
 
 // Error handling
