@@ -61,30 +61,55 @@ async function initMySQL() {
 // Function to create products table if it doesn't exist
 async function createProductsTable(connection) {
   try {
-    const createTableSQL = `
+    // Create products table
+    const createProductsTableSQL = `
       CREATE TABLE IF NOT EXISTS products (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
+        id VARCHAR(255) PRIMARY KEY,
+        title VARCHAR(500) NOT NULL,
         description TEXT,
-        tags VARCHAR(500),
+        tags TEXT,
         image_url VARCHAR(500),
         image_alt VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_title (title(100)),
+        INDEX idx_tags (tags(100)),
+        FULLTEXT INDEX idx_search (title, description, tags)
       )
     `;
     
-    await connection.execute(createTableSQL);
+    await connection.execute(createProductsTableSQL);
     console.log('✅ Products table created/verified successfully');
     
-    // Check if table is empty and add sample data
-    const [rows] = await connection.execute('SELECT COUNT(*) as count FROM products');
-    if (rows[0].count === 0) {
+    // Create product_variants table
+    const createVariantsTableSQL = `
+      CREATE TABLE IF NOT EXISTS product_variants (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        product_id VARCHAR(255) NOT NULL,
+        title VARCHAR(255),
+        price DECIMAL(10,2),
+        inventory_quantity INT DEFAULT 0,
+        available_for_sale BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+        INDEX idx_product_id (product_id),
+        INDEX idx_price (price),
+        INDEX idx_available (available_for_sale)
+      )
+    `;
+    
+    await connection.execute(createVariantsTableSQL);
+    console.log('✅ Product variants table created/verified successfully');
+    
+    // Check if products table is empty and add sample data
+    const [productRows] = await connection.execute('SELECT COUNT(*) as count FROM products');
+    if (productRows[0].count === 0) {
       await addSampleProducts(connection);
       console.log('✅ Sample products added to database');
     }
     
   } catch (error) {
-    console.error('❌ Error creating products table:', error.message);
+    console.error('❌ Error creating tables:', error.message);
   }
 }
 
@@ -93,6 +118,7 @@ async function addSampleProducts(connection) {
   try {
     const sampleProducts = [
       {
+        id: 'ruby-001',
         title: 'Ruby Gemstone',
         description: 'Beautiful red ruby gemstone with excellent clarity',
         tags: 'ruby,red,gemstone,precious',
@@ -100,6 +126,7 @@ async function addSampleProducts(connection) {
         image_alt: 'Ruby Gemstone'
       },
       {
+        id: 'sapphire-001',
         title: 'Sapphire Crystal',
         description: 'Stunning blue sapphire with deep color',
         tags: 'sapphire,blue,gemstone,precious',
@@ -107,6 +134,7 @@ async function addSampleProducts(connection) {
         image_alt: 'Sapphire Crystal'
       },
       {
+        id: 'emerald-001',
         title: 'Emerald Stone',
         description: 'Vibrant green emerald with natural inclusions',
         tags: 'emerald,green,gemstone,precious',
@@ -117,8 +145,14 @@ async function addSampleProducts(connection) {
     
     for (const product of sampleProducts) {
       await connection.execute(
-        'INSERT INTO products (title, description, tags, image_url, image_alt) VALUES (?, ?, ?, ?, ?)',
-        [product.title, product.description, product.tags, product.image_url, product.image_alt]
+        'INSERT INTO products (id, title, description, tags, image_url, image_alt) VALUES (?, ?, ?, ?, ?, ?)',
+        [product.id, product.title, product.description, product.tags, product.image_url, product.image_alt]
+      );
+      
+      // Add variant for each product
+      await connection.execute(
+        'INSERT INTO product_variants (product_id, title, price, inventory_quantity, available_for_sale) VALUES (?, ?, ?, ?, ?)',
+        [product.id, product.title, 99.99, 10, true]
       );
     }
     
