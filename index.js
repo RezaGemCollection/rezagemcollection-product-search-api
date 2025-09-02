@@ -543,6 +543,7 @@ function filterProductsWithFuzzy(products, searchWords) {
         const wordLength = word.length;
         if (wordLength > 3) {
           // Substring check
+          const minSubstringLength = Math.max(3, Math.floor(wordLength * 0.6));
           for (let i = 0; i <= wordLength - Math.floor(wordLength * 0.4); i++) {
             const substring = word.substring(i, i + minSubstringLength);
             if (searchText.includes(substring)) return true;
