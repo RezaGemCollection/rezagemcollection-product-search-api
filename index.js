@@ -91,7 +91,6 @@ async function createProductsTable(connection) {
         inventory_quantity INT DEFAULT 0,
         available_for_sale BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
         INDEX idx_product_id (product_id),
         INDEX idx_price (price),
         INDEX idx_available (available_for_sale)
