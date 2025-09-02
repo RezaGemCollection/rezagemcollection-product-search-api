@@ -1,0 +1,34 @@
+{
+  "name": "rezagemcollection-sync",
+  "version": "1.0.0",
+  "description": "Shopify to MySQL product sync system for Reza Gem Collection",
+  "main": "sync-server.js",
+  "scripts": {
+    "start": "node sync-server.js",
+    "dev": "nodemon sync-server.js",
+    "sync": "node shopify-to-mysql-sync.js",
+    "setup-db": "mysql -u root -p < setup-mysql.sql"
+  },
+  "keywords": [
+    "shopify",
+    "mysql",
+    "sync",
+    "products",
+    "gemstones",
+    "rezagemcollection"
+  ],
+  "author": "Reza Gem Collection",
+  "license": "MIT",
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.5.1",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mysql2": "^3.6.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
